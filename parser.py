@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import sys
+
 import sqlite3 as lite
 
 from urllib.request import urlopen
@@ -11,19 +13,19 @@ from bs4 import Tag, NavigableString
 
 from datetime import datetime
 
+from optparse import OptionParser
 
-def main():
 
-    new_database()
+def process_table(input_file, output_file, table_name):
 
-    input_con = lite.connect('playstore.sqlite')
-
-    output_con = lite.connect('output.sqlite')
+    new_database(output_file)
+    input_con = lite.connect(input_file)
+    output_con = lite.connect(output_file)
 
     with input_con:
 
         cursor = input_con.cursor()
-        cursor.execute("SELECT * FROM URLs")
+        cursor.execute("SELECT * FROM {table}".format(table=table_name))
 
         while True:
 
@@ -62,9 +64,9 @@ def escape(text):
     return text.replace("'", "''")
 
 
-def new_database():
+def new_database(output_file):
 
-    output_con = lite.connect('output.sqlite')
+    output_con = lite.connect(output_file)
 
     with output_con:
 
@@ -79,57 +81,81 @@ def new_database():
 
 def parse_url(app_id, url):
 
-    page = ''
-
-    # TODO: test exception handling
-
     try:
-        page = urlopen(url, timeout = 5)
 
-    except (HTTPError, URLError) as error:
-        print("error", error, "at url", url)
-    else:
-        print("opening", url)
+        page = ''
 
-    if page == '':
-        return ('','')
+        # TODO: test exception handling
 
-    soup = BeautifulSoup(page, "lxml")
-    xml_output = "<dse>"
+        try:
+            page = urlopen(url, timeout = 5)
 
-    headings = soup.find_all('h3')
+        except (HTTPError, URLError) as error:
+            print("error", error, "at url", url)
+        else:
+            print("opening", url)
 
-    for heading in headings:
-        xml_output += "<para>"
+        if page == '':
+            return ('','')
 
-        xml_output += "<title>"
-        xml_output += heading.string
-        xml_output += "</title>"
-        xml_output += "<text>"
+        soup = BeautifulSoup(page, "lxml")
+        xml_output = "<dse>"
 
-        sibling = heading.next_sibling
+        headings = soup.find_all('h3')
 
-        while sibling.name != 'h3':
+        for heading in headings:
 
-            if isinstance(sibling, Tag):
-                xml_output += sibling.get_text()
+            xml_output += "<para>"
 
-            sibling = sibling.next_sibling
+            xml_output += "<title>"
+            xml_output += heading.get_text()
+            xml_output += "</title>"
+            xml_output += "<text>"
 
-            if sibling is None:
-                break
+            sibling = heading.next_sibling
 
-        xml_output += "</text>"
-        xml_output += "</para>"
+            while sibling.name != 'h3':
 
-    xml_output += "</dse>"
+                if isinstance(sibling, Tag):
+                    xml_output += sibling.get_text()
 
-    xml_output = ' '.join(xml_output.split())
-    xml_output = xml_output.replace('\n', ' ')
+                sibling = sibling.next_sibling
 
-    xml_soup = BeautifulSoup(xml_output, "lxml-xml")
+                if sibling is None:
+                    break
 
-    return (soup.prettify(), xml_soup.prettify())
+            xml_output += "</text>"
+            xml_output += "</para>"
+
+        xml_output += "</dse>"
+
+        xml_output = ' '.join(xml_output.split())
+        xml_output = xml_output.replace('\n', ' ')
+
+        xml_soup = BeautifulSoup(xml_output, "lxml-xml")
+
+        return (soup.prettify(), xml_soup.prettify())
+
+    except:
+
+        return ('', '')
 
 
-main()
+def main():
+
+    parser = OptionParser()
+    parser.add_option("-i", "--input", dest="input_file", default="input.sqlite", metavar="INPUT_FILE",
+            help="read App-IDs and URLs from sqlite3 database stored in INPUT_FILE (default: input.sqlite)")
+    parser.add_option("-t", "--table", dest="table_name", default="URLs", metavar="TABLE_NAME",
+            help="name of the relevant table in INPUT_FILE (default: URLs)")
+    parser.add_option("-o", "--output", dest="output_file", default="output.sqlite", metavar="OUTPUT_VAR",
+            help="write output as sqlite3 database into OUTPUT_FILE (default: output.sqlite)")
+    options, args = parser.parse_args()
+
+    process_table(options.input_file, options.output_file, options.table_name)
+
+    sys.exit(0)
+
+if __name__ == "__main__":
+    main()
+
