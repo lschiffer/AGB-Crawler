@@ -29,34 +29,40 @@ def process_table(input_file, output_file, table_name):
 
         while True:
 
-            row = cursor.fetchone()
+            try:
 
-            if row == None:
+                row = cursor.fetchone()
+
+                if row == None:
+                    break
+
+                app_id = row[0]
+                url = row[1]
+
+                (page, xml) = split_on_all(app_id, url)
+                print(xml, "\n\n\n")
+
+                with output_con:
+
+                    output_cursor =  output_con.cursor()
+
+                    output_cursor.execute("INSERT OR IGNORE INTO AGB (app_id,text_url) VALUES ('{id}','{text_url}')".\
+                    format(id=app_id, text_url=url))
+
+                    output_cursor.execute("UPDATE AGB SET text_crawldate=('{date}') WHERE app_id='{id}'".\
+                    format(id=app_id, date=datetime.isoformat(datetime.now())))
+
+                    output_cursor.execute("UPDATE AGB SET text_raw=('{raw}') WHERE app_id='{id}'".\
+                    format(id=app_id, raw=escape(page)))
+
+                    output_cursor.execute("UPDATE AGB SET text_xml=('{text_xml}') WHERE app_id='{id}'".\
+                    format(id=app_id, text_xml=escape(xml)))
+
+                    #TODO: write into existing database without creating a new one every time
+
+            except:
+
                 break
-
-            app_id = row[0]
-            url = row[1]
-
-            (page, xml) = parse_url(app_id, url)
-            print(xml, "\n\n\n")
-
-            with output_con:
-
-                output_cursor =  output_con.cursor()
-
-                output_cursor.execute("INSERT OR IGNORE INTO AGB (app_id,text_url) VALUES ('{id}','{text_url}')".\
-                format(id=app_id, text_url=url))
-
-                output_cursor.execute("UPDATE AGB SET text_crawldate=('{date}') WHERE app_id='{id}'".\
-                format(id=app_id, date=datetime.isoformat(datetime.now())))
-
-                output_cursor.execute("UPDATE AGB SET text_raw=('{raw}') WHERE app_id='{id}'".\
-                format(id=app_id, raw=escape(page)))
-
-                output_cursor.execute("UPDATE AGB SET text_xml=('{text_xml}') WHERE app_id='{id}'".\
-                format(id=app_id, text_xml=escape(xml)))
-
-                #TODO: write into existing database without creating a new one every time
 
 
 def escape(text):
@@ -79,7 +85,7 @@ def new_database(output_file):
        app_permissions TEXT)''')
 
 
-def parse_url(app_id, url):
+def split_on_most_frequent(app_id, url):
 
     try:
 
@@ -101,7 +107,12 @@ def parse_url(app_id, url):
         soup = BeautifulSoup(page, "lxml")
         xml_output = "<dse>"
 
-        headings = soup.find_all('h3')
+        h3 = ('h3', soup.find_all('h3'))
+        h2 = ('h2', soup.find_all('h2'))
+        h1 = ('h1', soup.find_all('h1'))
+        strong = ('string', soup.find_all('strong'))
+
+        (heading_tag, headings) = max([h3, h2, h1, strong], key=lambda x: len(x[1]))
 
         for heading in headings:
 
@@ -114,7 +125,7 @@ def parse_url(app_id, url):
 
             sibling = heading.next_sibling
 
-            while sibling.name != 'h3':
+            while sibling.name != heading_tag:
 
                 if isinstance(sibling, Tag):
                     xml_output += sibling.get_text()
@@ -138,6 +149,68 @@ def parse_url(app_id, url):
 
     except:
 
+        return ('', '')
+
+
+def split_on_all(app_id, url):
+
+    try:
+
+        page = ''
+
+        try:
+            page = urlopen(url, timeout = 5)
+
+        except (HTTPError, URLError) as error:
+            print("error", error, "at url", url)
+        else:
+            print("opening", url)
+
+        if page == '':
+            return ('','')
+
+        soup = BeautifulSoup(page, "lxml")
+        xml_output = "<dse>"
+
+        headings = soup.findAll(['h3', 'h2', 'h1', 'strong'])
+
+        for heading in headings:
+
+            xml_output += "<para>"
+
+            xml_output += "<title>"
+            xml_output += heading.get_text()
+            xml_output += "</title>"
+            xml_output += "<text>"
+
+            #sibling = heading.find_next(['p','div','ul','ol','li'])
+            sibling = heading.next_sibling
+
+            while sibling and sibling.name not in ['h3', 'h2', 'h1', 'strong']:
+
+                if isinstance(sibling, Tag):
+                    xml_output += sibling.get_text()
+
+                #sibling = sibling.find_next(['p','div','ul','ol','li'])
+                sibling = sibling.next_sibling
+
+            xml_output += "</text>"
+            xml_output += "</para>"
+
+        xml_output += "</dse>"
+
+        xml_output = ' '.join(xml_output.split())
+        xml_output = xml_output.replace('\n', ' ')
+
+        xml_soup = BeautifulSoup(xml_output, "lxml-xml")
+
+        if(len(xml_soup.prettify()) < 100):
+            return(soup.prettify(), '')
+
+        return (soup.prettify(), xml_soup.prettify())
+
+    except Exception as e:
+        print(e)
         return ('', '')
 
 
