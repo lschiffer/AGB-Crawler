@@ -41,7 +41,7 @@ def process_table(input_file, output_file, table_name):
 
                 app_id = row[0]
                 url = row[1]
-                #permissions = row[2]
+                permissions = row[2]
 
                 (page, xml) = split_on_all(app_id, url)
                 logger.debug(str(xml) + "\n\n\n")
@@ -61,6 +61,10 @@ def process_table(input_file, output_file, table_name):
 
                     output_cursor.execute("UPDATE AGB SET text_xml=('{text_xml}') WHERE app_id='{id}'".\
                     format(id=app_id, text_xml=escape(xml)))
+
+                    if(permissions):
+                        output_cursor.execute("UPDATE AGB SET app_permissions=('{perm}') WHERE app_id='{id}'".\
+                        format(id=app_id, perm=permissions))
 
                     #TODO: write into existing database without creating a new one every time
 
@@ -115,24 +119,33 @@ def split_on_all(app_id, url):
 
         for heading in headings:
 
-            xml_output += "<para>"
-
-            xml_output += "<title>"
-            xml_output += heading.get_text()
-            xml_output += "</title>"
-            xml_output += "<text>"
+            text_output = ''
 
             sibling = heading.next_sibling
 
             while sibling and sibling.name not in ['h3', 'h2', 'h1', 'strong']:
 
                 if isinstance(sibling, Tag):
-                    xml_output += sibling.get_text()
+                    text_output += sibling.get_text()
 
                 sibling = sibling.next_sibling
 
-            xml_output += "</text>"
-            xml_output += "</para>"
+            if(len(text_output) > 10):
+
+                if('<' in text_output):
+                    logger.warning(text_output)
+
+                text_output = text_output.replace('<', '(')
+                text_output = text_output.replace('>', ')')
+
+                xml_output += "<para>"
+                xml_output += "<title>"
+                xml_output += heading.get_text()
+                xml_output += "</title>"
+                xml_output += "<text>"
+                xml_output += text_output
+                xml_output += "</text>"
+                xml_output += "</para>"
 
         xml_output += "</dse>"
 
