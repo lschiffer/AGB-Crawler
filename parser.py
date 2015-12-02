@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import logging
 
 import sqlite3 as lite
 
@@ -17,6 +18,8 @@ from optparse import OptionParser
 
 
 def process_table(input_file, output_file, table_name):
+
+    logger = logging.getLogger()
 
     new_database(output_file)
     input_con = lite.connect(input_file)
@@ -38,9 +41,10 @@ def process_table(input_file, output_file, table_name):
 
                 app_id = row[0]
                 url = row[1]
+                #permissions = row[2]
 
                 (page, xml) = split_on_all(app_id, url)
-                print(xml, "\n\n\n")
+                logger.debug(str(xml) + "\n\n\n")
 
                 with output_con:
 
@@ -60,9 +64,9 @@ def process_table(input_file, output_file, table_name):
 
                     #TODO: write into existing database without creating a new one every time
 
-            except:
 
-                break
+            except Exception as e:
+                logger.warning("error " + str(e) + " at url " + url)
 
 
 def escape(text):
@@ -85,75 +89,10 @@ def new_database(output_file):
        app_permissions TEXT)''')
 
 
-def split_on_most_frequent(app_id, url):
-
-    try:
-
-        page = ''
-
-        # TODO: test exception handling
-
-        try:
-            page = urlopen(url, timeout = 5)
-
-        except (HTTPError, URLError) as error:
-            print("error", error, "at url", url)
-        else:
-            print("opening", url)
-
-        if page == '':
-            return ('','')
-
-        soup = BeautifulSoup(page, "lxml")
-        xml_output = "<dse>"
-
-        h3 = ('h3', soup.find_all('h3'))
-        h2 = ('h2', soup.find_all('h2'))
-        h1 = ('h1', soup.find_all('h1'))
-        strong = ('string', soup.find_all('strong'))
-
-        (heading_tag, headings) = max([h3, h2, h1, strong], key=lambda x: len(x[1]))
-
-        for heading in headings:
-
-            xml_output += "<para>"
-
-            xml_output += "<title>"
-            xml_output += heading.get_text()
-            xml_output += "</title>"
-            xml_output += "<text>"
-
-            sibling = heading.next_sibling
-
-            while sibling.name != heading_tag:
-
-                if isinstance(sibling, Tag):
-                    xml_output += sibling.get_text()
-
-                sibling = sibling.next_sibling
-
-                if sibling is None:
-                    break
-
-            xml_output += "</text>"
-            xml_output += "</para>"
-
-        xml_output += "</dse>"
-
-        xml_output = ' '.join(xml_output.split())
-        xml_output = xml_output.replace('\n', ' ')
-
-        xml_soup = BeautifulSoup(xml_output, "lxml-xml")
-
-        return (soup.prettify(), xml_soup.prettify())
-
-    except:
-
-        return ('', '')
-
-
 def split_on_all(app_id, url):
 
+    logger = logging.getLogger()
+
     try:
 
         page = ''
@@ -162,9 +101,9 @@ def split_on_all(app_id, url):
             page = urlopen(url, timeout = 5)
 
         except (HTTPError, URLError) as error:
-            print("error", error, "at url", url)
+            logger.warning("error " + str(error) + " at url " + url)
         else:
-            print("opening", url)
+            logger.info("opening " + url)
 
         if page == '':
             return ('','')
@@ -183,7 +122,6 @@ def split_on_all(app_id, url):
             xml_output += "</title>"
             xml_output += "<text>"
 
-            #sibling = heading.find_next(['p','div','ul','ol','li'])
             sibling = heading.next_sibling
 
             while sibling and sibling.name not in ['h3', 'h2', 'h1', 'strong']:
@@ -191,7 +129,6 @@ def split_on_all(app_id, url):
                 if isinstance(sibling, Tag):
                     xml_output += sibling.get_text()
 
-                #sibling = sibling.find_next(['p','div','ul','ol','li'])
                 sibling = sibling.next_sibling
 
             xml_output += "</text>"
@@ -210,7 +147,7 @@ def split_on_all(app_id, url):
         return (soup.prettify(), xml_soup.prettify())
 
     except Exception as e:
-        print(e)
+        logger.warning("error " + str(e) + " ar url " + url)
         return ('', '')
 
 
@@ -223,7 +160,19 @@ def main():
             help="name of the relevant table in INPUT_FILE (default: URLs)")
     parser.add_option("-o", "--output", dest="output_file", default="output.sqlite", metavar="OUTPUT_VAR",
             help="write output as sqlite3 database into OUTPUT_FILE (default: output.sqlite)")
+    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False,
+            help="print no output")
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False,
+            help="print parsed xml")
     options, args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    if options.quiet:
+        logger.setLevel(logging.WARNING)
+    if options.debug:
+        logger.setLevel(logging.DEBUG)
 
     process_table(options.input_file, options.output_file, options.table_name)
 
