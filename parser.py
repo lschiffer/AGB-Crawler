@@ -17,6 +17,8 @@ from datetime import datetime
 
 from optparse import OptionParser
 
+import re
+
 
 def process_table(input_file, output_file, crawler_name, store_name):
 
@@ -128,6 +130,10 @@ def split_on_all(app_id, url):
         page = page.decode("utf-8")
 
         soup = BeautifulSoup(page, "lxml")
+        soup = soup.find('body')
+
+        soup = remove_unwanted_tags(soup)
+
         xml_output = "<dse>"
 
         headings = soup.findAll(['h3', 'h2', 'h1', 'strong'])
@@ -176,13 +182,105 @@ def split_on_all(app_id, url):
         return ('', '')
 
 
+def remove_unwanted_tags(soup):
+
+    ### remove all unwanted tags which are very, very, very unlikely to contain the DSE/AGB
+    tags = ["script", "noscript", "link", "comment()", "form", "header", "footer",
+    "head", "foot", "nav", "style", "img", "input", "label",
+    "select", "meta"]
+
+    remove_tags  = soup.find_all(tags)
+    for tag in remove_tags:
+        tag.extract()
+
+    contains_phrase = soup.find_all(text=re.compile(r"back to top"))
+    contains_phrase += soup.find_all(text=re.compile(r"view full policy"))
+    for tag in contains_phrase:
+        tag.extract()
+
+    ### remove all DOM-nodes which are very likely to not contain the DSE like
+    #   header and footers and menus. These elements could mostly be identified
+    #   by their id and class names
+
+    # these are the relevant HTML-tags which my contain irrelevant elements
+    tags_list = [
+        "div", "span", "p", "article", "section", "ul", "ol", "aside",
+    ]
+
+    # to not remove elements with these id or class names
+    # e.g. <div class ="main content with_sidebar">
+    keywords_whitelist = [
+        "with_sidebar", "withsidebar", "has_sidebar", "hassidebar",
+        "with_sidemenu", "withsidemenu", "has_sidemenu", "hassidemenu",
+        "with_side_menu", "withside_menu", "has_side_menu", "hasside_menu",
+        "with_menu", "withmenu", "has_menu", "hasmenu"
+    ]
+
+    # remove all above specified HTML-tags, where the class/id contains
+    # at least one of these keywords
+    keywords = [
+        # Header and Banner
+        "header", "header_banner", "topbar", "heading",
+        # Footer
+        "footer", "footer_banner", "impressum", "bottombar",
+        # Sidebar
+        # do not use "sidebar"! often main-div class "with_sidebar" or "hassidebar"
+        # do not use "side". could also be "inside"
+        "side_menu",
+        # Banner
+        "banner_top", "top_banner", "banner_bottom", "bottom_banner", "side_banner",
+        "banner_side", "banner",
+        # Menu
+        # do not use "menu"!
+        "logo", "main_menu", "sub_menu", "menubar", "menu_top", "menu_bottom",
+        "navbar", "navigator", "navigation", "mobileNav", "desktopNav", "backNav", "nav",
+        "breadcrumbs", "pagination", "tabber", "tabs",
+        # Social Media
+        "facebook", "twitter", "social", "mailinglist", "instagram", "follow", "news", "rss",
+        "subscribe",
+        # Download and Form and versions
+        "email_form", "download_form", "versions", "language_select", "select", "download", "form",
+        # table of content
+        "toc", "tableofcontent", "table_of_content",
+        # adverds
+        "advertisement", "advert", "ads", "promo", "popup", "dialog",
+        # misc
+        "slideshow", "horizontal_line", "line", "language", "button", "support",
+        "help", "cookie", "comment", "copyright", "aftercontent", "tags", "related",
+        "tag-cloud", "authorbox", "recent-post", "entry-meta", "meta",
+
+        # very specific and maybe wrong
+        "boxes", "tabset", "feature", "xcap_title", "bottom"
+    ]
+
+    unwanted = soup.find_all(class_=(lambda x: x in keywords))
+    unwanted += soup.find_all(id=(lambda x: x in keywords))
+    for tag in unwanted:
+        if(x not in tag.contents for x in keywords_whitelist):
+            tag.extract()
+
+    with_menu = soup.find_all(class_='menu')
+    with_menu += soup.find_all(id='menu')
+
+    for tag in with_menu:
+        if(len(tag.get_text()) < 30):
+            tag.extract()
+
+    with_sidebar = soup.find_all(class_='sidebar')
+    with_sidebar += soup.find_all(id='sidebar')
+
+    for tag in with_sidebar:
+        if(len(tag.get_text()) < 300):
+            tag.extract()
+
+    return soup
+
+
 def main():
 
     parser = OptionParser()
     parser.add_option("-i", "--input", dest="input_files", default=[], metavar="INPUT_FILE", action="append",
             help="read App-IDs and URLs from sqlite3 database stored in INPUT_FILE (multiple input files possible)")
-    #parser.add_option("-t", "--table", dest="table_name", default="URLs", metavar="TABLE_NAME",
-    #        help="name of the relevant table in INPUT_FILE (default: URLs)")
     parser.add_option("-o", "--output", dest="output_file", default="output.sqlite", metavar="OUTPUT_FILE",
             help="write output as sqlite3 database into OUTPUT_FILE (default: output.sqlite)")
     parser.add_option("-c", "--crawler", dest="crawler_names", default=[], metavar="CRAWLER", action="append",
