@@ -21,6 +21,22 @@ import re
 
 
 def process_table(input_file, output_file, crawler_name, store_name):
+    '''
+    Processes all urls in a stated input file and writes the parsed
+    privacy policies into an output file.
+
+    :param input_file: path to the sqlite database containing the app ids, urls
+    and app permissions (optional), each in one column from left to right
+    :type input_file: string
+    :param output_file: path to the desired output sqlite database
+    :type output_file: string
+    :param crawler_name: name of the url crawler
+    :type crawler_name: string
+    :param store_name: name of the app store
+    :type store_name: string
+    :return: returns nothing
+
+    '''
 
     logger = logging.getLogger()
 
@@ -53,14 +69,15 @@ def process_table(input_file, output_file, crawler_name, store_name):
                 url = row[1]
                 permissions = row[2]
 
-                (page, xml) = split_on_all(app_id, url)
+                (page, xml) = parse_url(url)
                 logger.debug(str(xml) + "\n\n\n")
 
                 with output_con:
 
                     output_cursor =  output_con.cursor()
 
-                    output_cursor.execute("INSERT OR IGNORE INTO AGB (app_id,text_url) VALUES ('{id}','{text_url}')".\
+                    output_cursor.execute(\
+                    "INSERT OR IGNORE INTO AGB (app_id,text_url) VALUES ('{id}','{text_url}')".\
                     format(id=app_id, text_url=url))
 
                     output_cursor.execute("UPDATE AGB SET text_crawldate=('{date}') WHERE app_id='{id}'".\
@@ -77,21 +94,24 @@ def process_table(input_file, output_file, crawler_name, store_name):
                     format(id=app_id, store=store_name))
 
                     output_cursor.execute("UPDATE AGB SET text_raw=('{raw}') WHERE app_id='{id}'".\
-                    format(id=app_id, raw=escape(page)))
+                    format(id=app_id, raw=page.replace("'", "''")))
 
                     output_cursor.execute("UPDATE AGB SET text_xml=('{text_xml}') WHERE app_id='{id}'".\
-                    format(id=app_id, text_xml=escape(xml)))
+                    format(id=app_id, text_xml=xml.replace("'", "''")))
 
             except Exception as e:
                 logger.warning("error " + str(e) + " at url " + url)
 
 
-def escape(text):
-
-    return text.replace("'", "''")
-
-
 def new_database(output_file):
+    '''
+    Creates a new sqlite database with all necessary columns.
+
+    :param output_file: path to the sqlite database
+    :type output_file: string
+    :return: returns nothing
+
+    '''
 
     output_con = lite.connect(output_file)
 
@@ -106,12 +126,27 @@ def new_database(output_file):
        app_permissions TEXT)''')
 
 
-def split_on_all(app_id, url):
+def parse_url(url):
+    '''
+    Parses the privacy policy at the given url.
+    Only websites with utf-8 enconding are accepted.
+    After the fetch of the website, in a preprocessing step all tags
+    probably not containing content of the privacy policy are removed.
+    A split on all headings (h3, h2, h1, strong) is performed to section
+    the policy into paragraphs.
+
+    :param url: url of a website containing a privacy policy
+    :type url: string
+    :return: tuple of the raw html and the parsed xml of the website
+    :rtype: tuple(string, string)
+
+    '''
 
     logger = logging.getLogger()
 
     try:
 
+        # fetch html from given url
         page = ''
         response = ''
 
@@ -129,13 +164,17 @@ def split_on_all(app_id, url):
         page = response.read()
         page = page.decode("utf-8")
 
-        soup = BeautifulSoup(page, "lxml")
-        soup = soup.find('body')
+        # get body of the website as  soup
+        html_soup = BeautifulSoup(page, "lxml")
+        soup = html_soup.find('body')
 
+        # remove tags which are unlikely to contain relevant text
         soup = remove_unwanted_tags(soup)
 
+        # create xml output
         xml_output = "<dse>"
 
+        # split on headings and get text of all siblings of a heading
         headings = soup.findAll(['h3', 'h2', 'h1', 'strong'])
 
         for heading in headings:
@@ -151,6 +190,8 @@ def split_on_all(app_id, url):
 
                 sibling = sibling.next_sibling
 
+            # consider only text with at least 10 characters
+            # else heading and following text are skipped
             if(len(text_output) > 10):
 
                 text_output = text_output.replace('<', '(')
@@ -172,10 +213,11 @@ def split_on_all(app_id, url):
 
         xml_soup = BeautifulSoup(xml_output, "lxml-xml")
 
+        # consider only privacy policies with at least 100 characters
         if(len(xml_soup.prettify()) < 100):
             return(soup.prettify(), '')
 
-        return (soup.prettify(), xml_soup.prettify())
+        return (html_soup.prettify(), xml_soup.prettify())
 
     except Exception as e:
         logger.warning("error " + str(e) + " at url " + url)
@@ -183,8 +225,18 @@ def split_on_all(app_id, url):
 
 
 def remove_unwanted_tags(soup):
+    '''
+    Removes unwanted tags from the given soup, that are unlikely to contain
+    contents of the privacy policy. That is achieved by removing specific
+    tags and tags with specific class names, id names or text.
 
-    ### remove all unwanted tags which are very, very, very unlikely to contain the DSE/AGB
+    :param soup: soup of the website containing a privacy policy
+    :type soup: soup
+    :return: returns nothing
+
+    '''
+
+    # remove all unwanted tags
     tags = ["script", "noscript", "link", "comment()", "form", "header", "footer",
     "head", "foot", "nav", "style", "img", "input", "label",
     "select", "meta"]
@@ -193,21 +245,14 @@ def remove_unwanted_tags(soup):
     for tag in remove_tags:
         tag.extract()
 
+    # remove tags containing specific text
     contains_phrase = soup.find_all(text=re.compile(r"back to top"))
     contains_phrase += soup.find_all(text=re.compile(r"view full policy"))
     for tag in contains_phrase:
         tag.extract()
 
-    ### remove all DOM-nodes which are very likely to not contain the DSE like
-    #   header and footers and menus. These elements could mostly be identified
-    #   by their id and class names
-
-    # these are the relevant HTML-tags which my contain irrelevant elements
-    tags_list = [
-        "div", "span", "p", "article", "section", "ul", "ol", "aside",
-    ]
-
-    # to not remove elements with these id or class names
+    # do not remove elements with these id or class names,
+    # since they usually accompany relevant content
     # e.g. <div class ="main content with_sidebar">
     keywords_whitelist = [
         "with_sidebar", "withsidebar", "has_sidebar", "hassidebar",
@@ -216,8 +261,7 @@ def remove_unwanted_tags(soup):
         "with_menu", "withmenu", "has_menu", "hasmenu"
     ]
 
-    # remove all above specified HTML-tags, where the class/id contains
-    # at least one of these keywords
+    # remove all tags with  class/id containing at least one of these keywords
     keywords = [
         # Header and Banner
         "header", "header_banner", "topbar", "heading",
@@ -253,22 +297,23 @@ def remove_unwanted_tags(soup):
         "boxes", "tabset", "feature", "xcap_title", "bottom"
     ]
 
+    # remove tags by inspecting their id and class names
     unwanted = soup.find_all(class_=(lambda x: x in keywords))
     unwanted += soup.find_all(id=(lambda x: x in keywords))
     for tag in unwanted:
         if(x not in tag.contents for x in keywords_whitelist):
             tag.extract()
 
+    # remove tags containing "menu" or "sidebar" only,
+    # if their length does not exceed a specified character limit
     with_menu = soup.find_all(class_='menu')
     with_menu += soup.find_all(id='menu')
-
     for tag in with_menu:
         if(len(tag.get_text()) < 30):
             tag.extract()
 
     with_sidebar = soup.find_all(class_='sidebar')
     with_sidebar += soup.find_all(id='sidebar')
-
     for tag in with_sidebar:
         if(len(tag.get_text()) < 300):
             tag.extract()
@@ -277,22 +322,36 @@ def remove_unwanted_tags(soup):
 
 
 def main():
+    '''
+    Reads parameters from the command line.
+    For information on  usage run parser with parameter --help.
 
+    '''
+
+    # parse command line options
     parser = OptionParser()
-    parser.add_option("-i", "--input", dest="input_files", default=[], metavar="INPUT_FILE", action="append",
-            help="read App-IDs and URLs from sqlite3 database stored in INPUT_FILE (multiple input files possible)")
-    parser.add_option("-o", "--output", dest="output_file", default="output.sqlite", metavar="OUTPUT_FILE",
-            help="write output as sqlite3 database into OUTPUT_FILE (default: output.sqlite)")
-    parser.add_option("-c", "--crawler", dest="crawler_names", default=[], metavar="CRAWLER", action="append",
-            help="name of the used crawler (multiple names possible)")
-    parser.add_option("-s", "--store", dest="store_names", default=[], metavar="STORE", action="append",
-            help="name of the crawled store (multiple stores possible)")
-    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False,
-            help="print no output")
-    parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False,
-            help="print parsed xml")
+
+    parser.add_option("-i", "--input", dest="input_files", default=[], metavar="INPUT_FILE", action="append",\
+    help="read App-IDs and URLs from sqlite3 database stored in INPUT_FILE (multiple input files possible)")
+
+    parser.add_option("-o", "--output", dest="output_file", default="output.sqlite", metavar="OUTPUT_FILE",\
+    help="write output as sqlite3 database into OUTPUT_FILE (default: output.sqlite)")
+
+    parser.add_option("-c", "--crawler", dest="crawler_names", default=[],metavar="CRAWLER", action="append",\
+    help="name of the used crawler (multiple names possible)")
+
+    parser.add_option("-s", "--store", dest="store_names", default=[], metavar="STORE", action="append",\
+    help="name of the crawled store (multiple stores possible)")
+
+    parser.add_option("-q", "--quiet", action="store_true", dest="quiet", default=False,\
+    help="print no output")
+
+    parser.add_option("-d", "--debug", action="store_true", dest="debug", default=False,\
+    help="print parsed xml")
+
     options, args = parser.parse_args()
 
+    # set logging level according to given options
     logging.basicConfig(level=logging.INFO, format="%(message)s")
     logger = logging.getLogger()
     logger.setLevel(logging.INFO)
@@ -301,6 +360,7 @@ def main():
     if options.debug:
         logger.setLevel(logging.DEBUG)
 
+    # adjust number of optional parameters to number of input files
     input_files = options.input_files
     crawler_names = options.crawler_names
     while len(crawler_names) < len(options.input_files):
@@ -309,6 +369,7 @@ def main():
     while len(store_names) < len(options.input_files):
         store_names.append("")
 
+    # process all input files
     for i in range(0, len(input_files)):
             process_table(input_files[i], options.output_file,
             crawler_names[i], store_names[i])
