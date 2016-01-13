@@ -16,12 +16,12 @@ import time
 from pyvirtualdisplay import Display
 from selenium import webdriver #used javascript like redirection of pages
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+import sys
 
-
-'
-Macroscopic Variables
-======================
-'
+#
+#Macroscopic Variables
+#======================
+#'''
 
 #Establish Database Connection
 database = sqlite3.connect('GooglePlay.db')
@@ -32,16 +32,15 @@ categories = ['ENTERTAINMENT', 'BOOKS_AND_REFERENCE', 'BUSINESS', 'COMICS', 'COM
 app_types = ['free', 'paid']
 
 #Anchorsfor Linkdetection
-agbAnchors = [ 'Datenschutzerklärung' , 'Datenschutz'  ] 
+agbAnchors = [ 'Datenschutz'  ] 
 
 #Baseurl of Playstore
 baseurl = 'https://play.google.com'
 
-
-'
-Function Definitions
-=====================
-'
+#
+#Function Definitions
+#=====================
+#'
 
 
 def get_redirected_url(url):
@@ -108,7 +107,7 @@ def get_redirected_url(url):
     print(redirected_url)
     #Now check if the Words are present  
     #print(soup.get_text())
-    if any( word.lower() in soup.get_text().lower() for word in ["Datenschutz" , "Datenschutzerklärung" , "Datenschutzbestimmung","AGB"]):
+    if any( word.lower() in soup.get_text().lower() for word in ["Datenschutz" , "Datenschutzerkl??rung" , "Datenschutzbestimmung","AGB"]):
         return redirected_url
     #driver.close()
     return None
@@ -216,15 +215,18 @@ def getAGBLink(pageCode):
 
 
     if not pageCodeBody:
+        print("pageCodeBody empty")
         return None
     
     #print (pageCodeBody)
     for anchor in agbAnchors:
-        #print (anchor)
-        pattern  ='href="(?P<agb_link>\S{20,200})"[ ]{0,2}\S{0,30}[ ]{0,2}\S{0,30}">'+anchor+'</a>'
+        print (anchor)
+        #print (pageCodeBody)
+        pattern  ='href="(?P<agb_link>\S{20,200})"[ ]{0,2}\S{0,30}[ ]{0,2}\S{0,30}">'+anchor
         result = re.search(pattern,pageCodeBody)
         if result:
             #resolve redirect
+            print(result.group('agb_link'))
             return get_redirected_url(result.group('agb_link'))
         
         else:
@@ -288,15 +290,45 @@ def getLinks():
                 continue
             else:
                 print(app.replace('/store/apps/details?id=',''),"   ",agb_url)
+                permissions = getPermissions(app.replace('/store/apps/details?id=',''))
                 #print("INSERT INTO agb_links (ID,url) VALUES ('"+app.replace('/store/apps/details?id=','')+"','"+agb_url+"')")
                 try:
-                    conn.execute("INSERT INTO agb_links (ID,url) VALUES ('"+app.replace('/store/apps/details?id=','')+"','"+agb_url+"');")
+                    update_cm=u"INSERT INTO agb_links (ID,url,permissions) VALUES ('"+app.replace('/store/apps/details?id=','')+u"','"+agb_url+u"','" + permissions + u"');"
+                    conn.execute(update_cm)
                     database.commit()
                 except:
                     pass
+                
+            break
 
-'
+
+import requests
+def getPermissions(ids):
+    '''
+    Retrieve App permissions
+    :param ids: App-ID
+    
+    :return : Comma seperated list of permissions
+    
+    '''
+    payload ={'ids' : ids, 'xhr' : '1'}
+    r = requests.post("https://play.google.com/store/xhr/getdoc?authuser=0",data=payload)
+
+    content = r.text
+    pattern  ='\[\[\"(?P<permission>.{0,50})\",\"Erm'   
+    result = re.findall(pattern,content)
+    if result:
+        print("Permissions found.")
+        for perm in set(result): 
+            sys.stdout.buffer.write(perm.encode('utf-8'))
+        return ",".join(set(result));
+    else:
+        print("No permissions found")
+        return ""
+
+
+'''
 Calling the crawler
 ===================
-'
+'''
 getLinks()
