@@ -69,7 +69,7 @@ def process_table(input_file, output_file, crawler_name, store_name):
                 url = row[1]
                 permissions = row[2]
 
-                (page, xml) = parse_url(url)
+                (page, xml, empty_text_count) = parse_url(url)
                 logger.debug(str(xml) + "\n\n\n")
 
                 with output_con:
@@ -99,6 +99,9 @@ def process_table(input_file, output_file, crawler_name, store_name):
                     output_cursor.execute("UPDATE AGB SET text_xml=('{text_xml}') WHERE app_id='{id}'".\
                     format(id=app_id, text_xml=xml.replace("'", "''")))
 
+                    output_cursor.execute("UPDATE AGB SET empty_text_count=('{count}') WHERE app_id='{id}'".\
+                    format(id=app_id, count=empty_text_count))
+
             except Exception as e:
                 logger.warning("error " + str(e) + " at url " + url)
 
@@ -122,7 +125,7 @@ def new_database(output_file):
        cur.execute('''CREATE TABLE AGB(app_id TEXT PRIMARY KEY, text_url
        TEXT, text_raw TEXT, text_xml TEXT, crawler_name TEXT, text_type
        TEXT, text_crawldate TEXT, check_auto BOOL, check_man BOOL,
-       text_quality INTEGER, app_name TEXT, app_storename TEXT,
+       text_quality INTEGER, empty_text_count INTEGER, app_name TEXT, app_storename TEXT,
        app_permissions TEXT)''')
 
 
@@ -144,6 +147,8 @@ def parse_url(url):
 
     logger = logging.getLogger()
 
+    empty_text_count = 0
+
     try:
 
         # fetch html from given url
@@ -159,7 +164,7 @@ def parse_url(url):
             logger.info("opening " + url)
 
         if(not response):
-            return ('','')
+            return ('','', empty_text_count)
 
         page = response.read()
         page = page.decode("utf-8")
@@ -176,6 +181,7 @@ def parse_url(url):
 
         # split on headings and get text of all siblings of a heading
         headings = soup.findAll(['h3', 'h2', 'h1', 'strong'])
+
 
         for heading in headings:
 
@@ -206,6 +212,10 @@ def parse_url(url):
                 xml_output += "</text>"
                 xml_output += "</para>"
 
+            else:
+
+                empty_text_count += 1
+
         xml_output += "</dse>"
 
         xml_output = ' '.join(xml_output.split())
@@ -215,13 +225,13 @@ def parse_url(url):
 
         # consider only privacy policies with at least 100 characters
         if(len(xml_soup.prettify()) < 100):
-            return(soup.prettify(), '')
+            return(soup.prettify(), '', empty_text_count)
 
-        return (html_soup.prettify(), xml_soup.prettify())
+        return (html_soup.prettify(), xml_soup.prettify(), empty_text_count)
 
     except Exception as e:
         logger.warning("error " + str(e) + " at url " + url)
-        return ('', '')
+        return ('', '', empty_text_count)
 
 
 def remove_unwanted_tags(soup):
