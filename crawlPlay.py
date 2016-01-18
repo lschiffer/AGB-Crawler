@@ -302,6 +302,75 @@ def getLinks():
             break
 
 
+
+
+def getLinksRecursive():
+    '''
+    Main Function Loop
+    Retrieving all the links to Privacy Agreements for alle the top 100 Apps in every Category 
+    Written as function, cann be called from outside.
+    Has no return value, because discovered links will be directly written to sqlite3-Database.
+    
+    
+    '''
+    for category, app_type in [( x, y ) for x in categories for y in app_types]:
+        print( "\nType = ", app_type, " Cateory = ", category )
+        url = baseurl + '/store/apps/category/' + category + '/collection/topselling_' + app_type
+        #print(url)
+        appList = getApps( url , 0 , 100 )
+        for app in appList:
+            print("\n\n")
+            
+            #check if already tested
+            conn.execute("select ID from (select ID from agb_links UNION ALL select ID from noAGB) WHERE ID = ?", (app.replace('/store/apps/details?id=',''),))
+            data=conn.fetchone()
+            if data is None:
+                print('Searching for %s'%app.replace('/store/apps/details?id=',''))
+            else  :
+                print('Skipping %s'%(app.replace('/store/apps/details?id=','')))
+                continue
+
+                        
+            #Get the Page Source Code
+            #print ( baseurl + app + '&hl=de' )
+            req =  baseurl + app + '&hl=de'
+            try:
+                response = urllib.request.urlopen( req ,None, 1 )
+            except:
+                print( "HTTPError with: ", url, "\t", e )
+                continue
+            the_page = response.read()
+            the_page = the_page.decode("utf-8")
+            
+            
+            #Get the AGB URL from source Code
+            agb_url = ""
+            agb_url = getAGBLink(the_page)
+            if not agb_url:
+                print("No Url found")
+                try:
+                    #print("INSERT INTO noAGB (ID) VALUES ('"+app.replace('/store/apps/details?id=','')+"');")
+                    conn.execute("INSERT INTO noAGB (ID) VALUES ('"+app.replace('/store/apps/details?id=','')+"');")
+                    database.commit()
+                except:
+                    print("SQL Error...")
+                    pass
+                continue
+            else:
+                print(app.replace('/store/apps/details?id=',''),"   ",agb_url)
+                permissions = getPermissions(app.replace('/store/apps/details?id=',''))
+                #print("INSERT INTO agb_links (ID,url) VALUES ('"+app.replace('/store/apps/details?id=','')+"','"+agb_url+"')")
+                try:
+                    update_cm=u"INSERT INTO agb_links (ID,url,permissions) VALUES ('"+app.replace('/store/apps/details?id=','')+u"','"+agb_url+u"','" + permissions + u"');"
+                    conn.execute(update_cm)
+                    database.commit()
+                except:
+                    pass
+                
+            break
+
+
+
 import requests
 def getPermissions(ids):
     '''
