@@ -127,7 +127,7 @@ def Cutting(xml):
         #Die zweite es steht außerhalb des textes, was dadurch passieren kann weil oben alle nicht gefundenen Wörter auf len+1 gesetzt wurden, dann soll es abbrechen, dann gibt es keines der Wörter weiter im Text
         elif gefunden>ende:
             if gefunden>len(xml):
-                endergebnis=ausgang;
+                endergebnis=ausgang
                 break
             xml= xml[(ende+8):]
             
