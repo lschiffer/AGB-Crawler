@@ -38,17 +38,17 @@ def check_keywords(xml):
 
     if var1 > n:
         e=True
-    elif var2 > n:
+    if var2 > n:
         e=True
-    elif var3 > n:
+    if var3 > n:
         e=True
-    elif var4 > n:
+    if var4 > n:
         e=True
-    elif var5 > n:
+    if var5 > n:
         e=True
-    elif var6 > n:
+    if var6 > n:
         e=True
-    elif var7 > n:
+    if var7 > n:
         e=True
     return e
 
@@ -64,7 +64,7 @@ def minimum(liste):
 
     return min
 
-def cutting(queue, xml):
+def cutting(xml):
     """Check if there are curly braces inside given xml-string
 
     @param xml: xml string to check
@@ -109,6 +109,7 @@ def cutting(queue, xml):
         if gefunden7 == -1:
             gefunden7=len(xml)+1
         #Suche den Kleinsten Wert, dies ist das Wort as zuerst geprüft wird, ob es im title steht
+        #print(gefunden1, " ", gefunden2, " ", gefunden3, " ", gefunden4, " ", gefunden5, " ", gefunden6, " ", gefunden7, "\n")
         gefunden= minimum([gefunden1, gefunden2, gefunden3, gefunden4, gefunden5, gefunden6, gefunden7])
         #print(gefunden)
 
@@ -123,21 +124,22 @@ def cutting(queue, xml):
             if gefunden>anfang:
                 ergebnis= xml[anfang:]
                 endergebnis=text+ergebnis
+                #print(endergebnis)
                 break
 
         #Wenn das gefundene Wort hinter dem title steht gibt es 2 Varianten: Die erste ist es steht noch vor dem Ende des Textes, dann wird alles incl der 2 title rausgekürzt
         #Die zweite es steht außerhalb des textes, was dadurch passieren kann weil oben alle nicht gefundenen Wörter auf len+1 gesetzt wurden, dann soll es abbrechen, dann gibt es keines der Wörter weiter im Text
-        elif gefunden>ende:
+        if gefunden>ende:
             if gefunden>len(xml):
                 endergebnis=ausgang
                 break
             xml= xml[(ende+8):]
 
         #Wenn das Wort in einem text vor dem title steht wird dieser text weggekürzt
-        elif gefunden<anfang:
+        if gefunden<anfang:
             xml= xml[anfang:]
 
-    queue.put(endergebnis)
+    #queue.put(endergebnis)
     return endergebnis
 
 def main(database = "parsed_all.db"):
