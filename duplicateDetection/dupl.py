@@ -5,10 +5,14 @@ import xml.etree.ElementTree as etree
 import re
 from optparse import OptionParser
 import sqlite3 as lite
+import os.path
 
 
-threshold_similarity = 0.8
-threshold_length = 300
+
+
+##Treshhold Variables, adjust if need be
+threshold_similarity = 0.8  # All Documents with the  average of percentages  greater this will be written to outputfiles as Duplicates
+threshold_length = 300      # Only Documents with length Difference greater than this
 threshold_minlength = 100
 
 
@@ -32,12 +36,11 @@ def similarityof(document_1,document_2):
     if len(vocab_1) < threshold_minlength or len(vocab_2) < threshold_minlength:
         return [0.0,0.0]
     
-    #print ("manual_number_of_words:	",vocab_1)
-    #print ("autogen_number_of_words:	",vocab_2)
 
 
-    ##
-    tmp=list(vocab_2)
+
+    ## Count percentage of words in vocab 1 that are contained in vocab 2 
+    tmp=list(vocab_2)  #Temporary List, so the found words cann be removed (To avoid counting words multiple times)
     number_1_in_2=0
     for word in vocab_1:
             if word in tmp:
@@ -45,18 +48,20 @@ def similarityof(document_1,document_2):
                     tmp.remove(word)
 
     percentage1=float(number_1_in_2)/float(len(vocab_1))
-    ##
-    tmp=list(vocab_1)
+    
+    
+    ## Count percentage of words in vocab 2 that are contained in vocab 1
+    tmp=list(vocab_1) #Temporary List, so the found words cann be removed (To avoid counting words multiple times)
     number_2_in_1 = 0
     for word in vocab_2:
             if word in tmp:
                     number_2_in_1+=1
                     tmp.remove(word)
                     
-
-
     percentage2=float(number_2_in_1)/float(len(vocab_2))
 
+
+    
     return [percentage1,percentage2]
     
 def new_database(output_file):
@@ -97,19 +102,38 @@ def grab_duplicates(input_file,output_file):
         
         
         for i in range(1,number_of_entries):
+            
+            #get the entry to compare with
             cursor.execute("Select app_id,text_xml,LENGTH(text_xml) from AGB  WHERE LENGTH(text_xml)>10 ORDER BY LENGTH(text_xml) DESC  LIMIT 1 OFFSET " + repr(i)  )
             row = cursor.fetchone()
-            app_id1 = repr(row[0])
-            doc1 = repr(row[1].encode('utf-8'));  
+            
+            try:
+                app_id1 = repr(row[0])
+            except TypeError:
+                break
+            
+            try:
+                doc1 = repr(row[1].encode('utf-8'));  
+            except TypeError:
+                break
             length_doc1 = row[2]
             
+            
+            #compare only rows after (avoid comparing the same documents mulitple times
             docs = cursor.execute("Select app_id,text_xml,LENGTH(text_xml) from AGB WHERE LENGTH(text_xml)>10 ORDER BY LENGTH(text_xml) DESC Limit " + repr(i+1) +",-1" )
 
-            print("Comparing all to: ",app_id1.encode("utf-8"))
+            print(repr(i)+": Comparing all to: ",app_id1.encode("utf-8"))
             for doc_row in docs:
                 
-                app_id2 = repr(doc_row[0])
-                doc2 = repr(doc_row[1].encode('utf-8'));
+                try:
+                    app_id2 = repr(doc_row[0])
+                except TypeError:
+                    break
+                try:
+                    doc2 = repr(doc_row[1].encode('utf-8'));
+                except TypeError:
+                    break
+                    
                 length_doc2 =int(doc_row[2])
                 
                 
@@ -117,7 +141,8 @@ def grab_duplicates(input_file,output_file):
                 output_cursor.execute("SELECT count(*) FROM duplicates WHERE app_id2 = "+app_id2)
                 data=output_cursor.fetchone()[0]
 
-                if data!=0:
+                ## if entry already known to be a duplicate
+                if data!=0: #Number of entries in duplicate database != 0
                     break
                 
 
@@ -155,11 +180,19 @@ def main():
     parser.add_option("-i","--input",dest = "input_file",default =[], metavar="INPUT_FILE" ,action = "append", help="reading in sqlite3 database")
     parser.add_option("-o","--output",dest = "output_file",default =[], metavar="OUTPUT_FILE" ,action = "append", help="reading in sqlite3 database")
     
+    
+    
     options, args = parser.parse_args()
     input_file = options.input_file   
     output_file = options.output_file
     print(output_file[0])
-    #new_database(output_file[0])
+    
+    
+    
+    if (!os.path.isfile(output_file[0])):
+        new_database(output_file[0])
+        
+        
     grab_duplicates(input_file[0],output_file[0])
     
     
