@@ -19,6 +19,13 @@ from optparse import OptionParser
 
 import re
 
+import multiprocessing as mp
+from queue import Queue
+import asyncio
+
+import check_trim
+import checkJS
+
 
 def process_table(input_file, output_file, crawler_name, store_name):
     '''
@@ -102,6 +109,55 @@ def process_table(input_file, output_file, crawler_name, store_name):
                     output_cursor.execute("UPDATE AGB SET empty_text_count=('{count}') WHERE app_id='{id}'".\
                     format(id=app_id, count=empty_text_count))
 
+                    # call auto check functions and trimming
+
+                    if(xml):
+
+                        lang = check_trim.language_detect(xml)
+
+                        trimmed= ''
+
+                        #result_queue = mp.Queue()
+
+                        #p = mp.Process(target=teilaufgabe.cutting,
+                        #name="Cutting", args=(result_queue, xml,))
+                        #p.start()
+                        #p.join(3)
+
+
+                        ## terminate trimming function if timeout
+                        #if p.is_alive():
+                        #    logger.debug("trimming function timeout")
+                        #    p.terminate()
+                        #    p.join()
+
+                        #if(not result_queue.empty()):
+                        #    try:
+                        #        trimmed = result_queue.get_nowait()
+                        #    except (asyncio.QueueEmpty):
+                        #        print("Queue empty?")
+                        #        continue
+                        #else:
+                        #    print("Queue empty!")
+
+                        trimmed = check_trim.cutting(xml)
+
+                        contains_keywords = check_trim.check_keywords(xml)
+
+                        contains_javascript = checkJS.checkJS(xml)
+
+                        output_cursor.execute("UPDATE AGB SET language=('{language}') WHERE app_id='{id}'".\
+                        format(id=app_id, language=lang))
+
+                        output_cursor.execute("UPDATE AGB SET text_xml_trimmed=('{text_xml_trimmed}') WHERE app_id='{id}'".\
+                        format(id=app_id, text_xml_trimmed=trimmed.replace("'", "''")))
+
+                        output_cursor.execute("UPDATE AGB SET contains_keywords=('{contains}') WHERE app_id='{id}'".\
+                        format(id=app_id, contains=contains_keywords))
+
+                        output_cursor.execute("UPDATE AGB SET contains_js=('{contains}') WHERE app_id='{id}'".\
+                        format(id=app_id, contains=contains_javascript))
+
             except Exception as e:
                 logger.warning("error " + str(e) + " at url " + url)
 
@@ -122,11 +178,11 @@ def new_database(output_file):
 
        cur =  output_con.cursor()
        cur.execute('''DROP TABLE IF EXISTS AGB''')
-       cur.execute('''CREATE TABLE AGB(app_id TEXT PRIMARY KEY, text_url
-       TEXT, text_raw TEXT, text_xml TEXT, crawler_name TEXT, text_type
-       TEXT, text_crawldate TEXT, check_auto BOOL, check_man BOOL,
-       text_quality INTEGER, empty_text_count INTEGER, app_name TEXT, app_storename TEXT,
-       app_permissions TEXT)''')
+       cur.execute('''CREATE TABLE AGB(app_id TEXT PRIMARY KEY,
+       text_url TEXT, text_raw TEXT, text_xml TEXT, text_xml_trimmed TEXT,
+       language TEXT, text_quality INTEGER, check_man BOOL, contains_keywords BOOL, contains_js BOOL,
+       empty_text_count INTEGER, app_storename TEXT,
+       crawler_name TEXT, app_permissions TEXT, text_crawldate TEXT, comment TEXT)''')
 
 
 def parse_url(url):

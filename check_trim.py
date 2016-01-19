@@ -7,7 +7,7 @@ Qualitätsprüfung (soll Boolean zurückgeben)
 import sqlite3
 from langdetect import detect
 
-from multiprocessing import Queue
+#from multiprocessing import Queue
 
 def language_detect(xml):
     """Check if there are curly braces inside given xml-string
@@ -137,7 +137,9 @@ def cutting(xml):
 
         #Wenn das Wort in einem text vor dem title steht wird dieser text weggekürzt
         if gefunden<anfang:
-            xml= xml[anfang:]
+            #xml= xml[anfang:]
+            endergebnis = ausgang
+            break
 
     #queue.put(endergebnis)
     return endergebnis
