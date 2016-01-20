@@ -149,7 +149,7 @@ def process_table(input_file, output_file, crawler_name, store_name):
                         output_cursor.execute("UPDATE AGB SET language=('{language}') WHERE app_id='{id}'".\
                         format(id=app_id, language=lang))
 
-                        output_cursor.execute("UPDATE AGB SET text_xml_trimmed=('{text_xml_trimmed}') WHERE app_id='{id}'".\
+                        output_cursor.execute("UPDATE AGB SET text_xml=('{text_xml_trimmed}') WHERE app_id='{id}'".\
                         format(id=app_id, text_xml_trimmed=trimmed.replace("'", "''")))
 
                         output_cursor.execute("UPDATE AGB SET contains_keywords=('{contains}') WHERE app_id='{id}'".\
@@ -179,8 +179,9 @@ def new_database(output_file):
        cur =  output_con.cursor()
        cur.execute('''DROP TABLE IF EXISTS AGB''')
        cur.execute('''CREATE TABLE AGB(app_id TEXT PRIMARY KEY,
-       text_url TEXT, text_raw TEXT, text_xml TEXT, text_xml_trimmed TEXT,
-       language TEXT, text_quality INTEGER, check_man BOOL, contains_keywords BOOL, contains_js BOOL,
+       text_url TEXT, text_raw TEXT, text_xml TEXT,
+       language TEXT, text_quality INTEGER, check_man BOOL,
+       duplicate BOOL, contains_keywords BOOL, contains_js BOOL,
        empty_text_count INTEGER, app_storename TEXT,
        crawler_name TEXT, app_permissions TEXT, text_crawldate TEXT, comment TEXT)''')
 
