@@ -48,21 +48,24 @@ def similarityof(document_1,document_2):
                     tmp.remove(word)
 
     percentage1=float(number_1_in_2)/float(len(vocab_1))
-    
-    
-    ## Count percentage of words in vocab 2 that are contained in vocab 1
-    tmp=list(vocab_1) #Temporary List, so the found words cann be removed (To avoid counting words multiple times)
-    number_2_in_1 = 0
-    for word in vocab_2:
-            if word in tmp:
-                    number_2_in_1+=1
-                    tmp.remove(word)
-                    
-    percentage2=float(number_2_in_1)/float(len(vocab_2))
-
-
-    
+    percentage2=float(number_1_in_2)/float(len(vocab_2))    
     return [percentage1,percentage2]
+
+
+
+    ## Count percentage of words in vocab 2 that are contained in vocab 1
+    #tmp=list(vocab_1) #Temporary List, so the found words cann be removed (To avoid counting words multiple times)
+    #number_2_in_1 = 0
+    #for word in vocab_2:
+            #if word in tmp:
+                    #number_2_in_1+=1
+                    #tmp.remove(word)
+                    
+    #percentage2=float(number_2_in_1)/float(len(vocab_2))
+    ##print(number_2_in_1,number_1_in_2)
+
+    
+    #return [percentage1,percentage2]
     
 def new_database(output_file):
     '''
@@ -71,17 +74,13 @@ def new_database(output_file):
     
     #:param output_file: Name of the sqlite3 database file that will be created
     '''
-    
 
-    output_con = lite.connect(output_file)
+    output_con_tmp = lite.connect(output_file)
+    with output_con_tmp:
+        cur =  output_con_tmp.cursor()
+        cur.execute('''CREATE TABLE if not exists duplicates(app_id1 TEXT , app_id2 TEXT , percentage1 float, percentage2 float, PRIMARY KEY( app_id1 , app_id2))''')
 
-    with output_con:
-
-       cur =  output_con.cursor()
-       cur.execute('''DROP TABLE IF EXISTS AGB''')
-       cur.execute('''CREATE TABLE duplicates(app_id1 TEXT , app_id2 TEXT , percentage1 float, percentage2 float, PRIMARY KEY( app_id1 , app_id2))''')
-
-
+    output_con_tmp.close()
 
 def grab_duplicates(input_file,output_file):
     '''
@@ -121,9 +120,10 @@ def grab_duplicates(input_file,output_file):
             
             #compare only rows after (avoid comparing the same documents mulitple times
             docs = cursor.execute("Select app_id,text_xml,LENGTH(text_xml) from AGB WHERE LENGTH(text_xml)>10 ORDER BY LENGTH(text_xml) DESC Limit " + repr(i+1) +",-1" )
-
+            res = cursor.fetchall()
+            
             print(repr(i)+": Comparing all to: ",app_id1.encode("utf-8"))
-            for doc_row in docs:
+            for doc_row in res:
                 
                 try:
                     app_id2 = repr(doc_row[0])
@@ -167,8 +167,29 @@ def grab_duplicates(input_file,output_file):
                     output_con.commit();
                 
             print("\n")
-    
+    #output_con.close()
+    #input_con.close()
 
+    
+def writeToDatabase(input_file,output_file):
+    input_con = lite.connect(input_file)
+    output_con = lite.connect(output_file)
+    
+    with input_con,output_con:
+        cursor = input_con.cursor()  
+        output_cursor = output_con.cursor()
+        cursor.execute("Select app_id2 from duplicates" )
+        apps = cursor.fetchall()
+        for app_row in apps:
+            try:
+                app_id2 = repr(app_row[0])
+            except TypeError:
+                break
+            output_cursor.execute("UPDATE AGB set duplicate=1 WHERE app_id="+app_id2+";")
+            output_con.commit();  
+      
+    output_con.close();
+        
     
 def main():
     '''
@@ -189,11 +210,10 @@ def main():
     
     
     
-    if (!os.path.isfile(output_file[0])):
-        new_database(output_file[0])
-        
-        
+    
+    new_database(output_file[0])
     grab_duplicates(input_file[0],output_file[0])
+    writeToDatabase(input_file[0],output_file[0])
     
     
 if __name__ == "__main__":
