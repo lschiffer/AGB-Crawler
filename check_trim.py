@@ -28,7 +28,7 @@ def check_keywords(xml):
     """
 
     xml = xml.lower()
-    keywords = ["datenschutz", "allgemeine geschäftsbedingungen", "privacy", "dse", "agb"]
+    keywords = ["datenschutz", "allgemeine geschäftsbedingungen", "privacy", "agb"]
     return (any(x in xml for x in keywords))
     
 def cutting(xml):
@@ -46,7 +46,7 @@ def cutting(xml):
     first_word_found=-1
     text ='<?xml version="1.0" encoding="utf-8"?>\n<dse>\n <para>\n  '
     final_result=raw_text
-    keywords = ["datenschutz", "allgemeine geschäftsbedingungen", "privacy", "dse", "agb"]
+    keywords = ["datenschutz", "allgemeine geschäftsbedingungen", "privacy", "agb"]
 
     while True:
         indizes=[]
