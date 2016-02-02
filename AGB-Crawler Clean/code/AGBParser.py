@@ -1,11 +1,4 @@
 #!/usr/bin/python
-"""
-@author: Lena Schiffer
-
-This is the Parsing module. It contains function to download and parse a HTML-Source of an AGB into strict XML. 
-
-"""
-
 
 import sys
 import os.path
@@ -30,7 +23,7 @@ import multiprocessing as mp
 from queue import Queue
 import asyncio
 
-import check
+import AGBCheck
 
 
 def process_table(input_file, output_file, crawler_name, store_name):
@@ -38,19 +31,17 @@ def process_table(input_file, output_file, crawler_name, store_name):
     Processes all urls in a stated input file and writes the parsed
     privacy policies into an output file.
 
-    :param input_file: path to the sqlite database containing the app ids, urls and app permissions (optional), each in one column from left to right
-    :type input_file: string 
-    
+    :param input_file: path to the sqlite database containing the app ids, urls
+    and app permissions (optional), each in one column from left to right
+    :type input_file: string
     :param output_file: path to the desired output sqlite database
     :type output_file: string
-    
     :param crawler_name: name of the url crawler
     :type crawler_name: string
-    
     :param store_name: name of the app store
     :type store_name: string
-    
     :return: returns nothing
+
     '''
 
     logger = logging.getLogger()
@@ -121,38 +112,14 @@ def process_table(input_file, output_file, crawler_name, store_name):
 
                     if(xml):
 
-                        lang = check.language_detect(xml)
+                        lang = AGBCheck.language_detect(xml)
 
                         trimmed= ''
 
-                        #result_queue = mp.Queue()
+                        trimmed = AGBCheck.cutting(xml)
 
-                        #p = mp.Process(target=teilaufgabe.cutting,
-                        #name="Cutting", args=(result_queue, xml,))
-                        #p.start()
-                        #p.join(3)
-
-
-                        ## terminate trimming function if timeout
-                        #if p.is_alive():
-                        #    logger.debug("trimming function timeout")
-                        #    p.terminate()
-                        #    p.join()
-
-                        #if(not result_queue.empty()):
-                        #    try:
-                        #        trimmed = result_queue.get_nowait()
-                        #    except (asyncio.QueueEmpty):
-                        #        print("Queue empty?")
-                        #        continue
-                        #else:
-                        #    print("Queue empty!")
-
-                        trimmed = check.cutting(xml)
-
-                        contains_keywords = check.check_keywords(xml)
-
-                        contains_javascript = check.checkJS(xml)
+                        contains_keywords = AGBCheck.check_keywords(xml)
+                        contains_javascript = AGBCheck.checkJS(xml)
 
                         output_cursor.execute("UPDATE AGB SET language=('{language}') WHERE app_id='{id}'".\
                         format(id=app_id, language=lang))
