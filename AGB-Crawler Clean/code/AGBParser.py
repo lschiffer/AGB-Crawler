@@ -30,8 +30,7 @@ import multiprocessing as mp
 from queue import Queue
 import asyncio
 
-import check_trim
-import checkJS
+import check
 
 
 def process_table(input_file, output_file, crawler_name, store_name):
@@ -39,17 +38,19 @@ def process_table(input_file, output_file, crawler_name, store_name):
     Processes all urls in a stated input file and writes the parsed
     privacy policies into an output file.
 
-    :param input_file: path to the sqlite database containing the app ids, urls
-    and app permissions (optional), each in one column from left to right
-    :type input_file: string
+    :param input_file: path to the sqlite database containing the app ids, urls and app permissions (optional), each in one column from left to right
+    :type input_file: string 
+    
     :param output_file: path to the desired output sqlite database
     :type output_file: string
+    
     :param crawler_name: name of the url crawler
     :type crawler_name: string
+    
     :param store_name: name of the app store
     :type store_name: string
+    
     :return: returns nothing
-
     '''
 
     logger = logging.getLogger()
@@ -120,7 +121,7 @@ def process_table(input_file, output_file, crawler_name, store_name):
 
                     if(xml):
 
-                        lang = check_trim.language_detect(xml)
+                        lang = check.language_detect(xml)
 
                         trimmed= ''
 
@@ -147,11 +148,11 @@ def process_table(input_file, output_file, crawler_name, store_name):
                         #else:
                         #    print("Queue empty!")
 
-                        trimmed = check_trim.cutting(xml)
+                        trimmed = check.cutting(xml)
 
-                        contains_keywords = check_trim.check_keywords(xml)
+                        contains_keywords = check.check_keywords(xml)
 
-                        contains_javascript = checkJS.checkJS(xml)
+                        contains_javascript = check.checkJS(xml)
 
                         output_cursor.execute("UPDATE AGB SET language=('{language}') WHERE app_id='{id}'".\
                         format(id=app_id, language=lang))

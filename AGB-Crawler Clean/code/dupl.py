@@ -23,7 +23,7 @@ threshold_minlength = 100   # Only Dokuments with more than 100 characters
 
 def similarityof(document_1,document_2):
     """
-    Calculation the percentage of mutually contained words.
+    Calculation of the percentages of mutually contained words.
     
     :param document_1: Document 1
     :param document_2: Document to compare with.
@@ -161,6 +161,13 @@ def grab_duplicates(input_file,output_file):
 
     
 def writeToDatabase(input_file,output_file):
+    """
+    Function to write the found duplicates from the duplicates table into the AGB Table
+    
+    :param input_file: Database that contains the duplicates table
+    :param output_file: Database that contains the AGB table
+    
+    """
     input_con = lite.connect(input_file)
     output_con = lite.connect(output_file)
     
