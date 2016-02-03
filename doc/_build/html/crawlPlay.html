@@ -1,0 +1,247 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>crawlPlay module &mdash; AGB-Crawler 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="AGB-Crawler 1.0 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-crawlPlay">
+<span id="crawlplay-module"></span><h1>crawlPlay module<a class="headerlink" href="#module-crawlPlay" title="Permalink to this headline">¶</a></h1>
+<p>Created on Dez 01, 2015</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">author:</th><td class="field-body">Janos Borst</td>
+</tr>
+</tbody>
+</table>
+<p>This is a crawler for the links to Privacy Agreements in GooglePlay store.
+It is specialised in finding only German Agreements.
+Because of high precision requirements it stops crawling the current app as soon as any possible source of error is detected, then proceeds with the next app.</p>
+<dl class="function">
+<dt id="crawlPlay.getAGBLink">
+<code class="descclassname">crawlPlay.</code><code class="descname">getAGBLink</code><span class="sig-paren">(</span><em>pageCode</em><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.getAGBLink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the Link to the privacy Agreement from the sourceCode of the App page</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>pageCode</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; Page source Code as string</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">url to the Privacy Agreement</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)">string</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.getApps">
+<code class="descclassname">crawlPlay.</code><code class="descname">getApps</code><span class="sig-paren">(</span><em>url</em>, <em>start</em>, <em>num</em><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.getApps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the initial Top Apps from the Category Page</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; url of the category page</li>
+<li><strong>start</strong> &#8211; offset</li>
+<li><strong>num</strong> (<a class="reference external" href="https://docs.python.org/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a>) &#8211; Number of Apps to be retrieved</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Type:</th><td class="field-body"><p class="first">string</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">List of App - IDs</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference external" href="https://docs.python.org/library/functions.html#list" title="(in Python v2.7)">list</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.getLinks">
+<code class="descclassname">crawlPlay.</code><code class="descname">getLinks</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.getLinks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieving all the links to Privacy Agreements for alle the top 100 Apps in every Category 
+Written as function, cann be called from outside.
+Has no return value, because discovered links will be directly written to sqlite3-Database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.getLinksRecursive">
+<code class="descclassname">crawlPlay.</code><code class="descname">getLinksRecursive</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.getLinksRecursive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieving all the links to Privacy Agreements for alle the top 100 Apps in every Category 
+Written as function, cann be called from outside.
+Has no return value, because discovered links will be directly written to sqlite3-Database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.getPageAsSoup">
+<code class="descclassname">crawlPlay.</code><code class="descname">getPageAsSoup</code><span class="sig-paren">(</span><em>url</em>, <em>post_values</em><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.getPageAsSoup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieving the sourcecode for the given url and Beautify with Bs4</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>url</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; the Pages urlencode</li>
+<li><strong>post_values</strong> (<em>Dictionary</em>) &#8211; Giving options to the HTML- Request</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the source Code as soup</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">soup</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.getPermissions">
+<code class="descclassname">crawlPlay.</code><code class="descname">getPermissions</code><span class="sig-paren">(</span><em>ids</em><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.getPermissions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve App permissions
+:param ids: App-ID</p>
+<p>:return : Comma seperated list of permissions</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.get_redirected_url">
+<code class="descclassname">crawlPlay.</code><code class="descname">get_redirected_url</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.get_redirected_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to resolve the URL redirection with respect to the precision</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; intial url</td>
+</tr>
+</tbody>
+</table>
+<p>:return the url of the final page, if it is a german AGB or Privacy Agreement. Otherwise None.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.main">
+<code class="descclassname">crawlPlay.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Crawling the Google playstore.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">-i:</th><td class="field-body">Crawl initial Seed from the TOP 100 of every Category</td>
+</tr>
+<tr class="field-even field"><th class="field-name">-r:</th><td class="field-body">Crawl recursively, starting with a database full of seeds called GooglePlay.db (created by -i).</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="crawlPlay.new_database">
+<code class="descclassname">crawlPlay.</code><code class="descname">new_database</code><span class="sig-paren">(</span><em>output_file</em><span class="sig-paren">)</span><a class="headerlink" href="#crawlPlay.new_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a New Database suited for the Duplicates.
+Columns: ID1, ID2, percentage1, percentage2</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> &#8211; Name of the sqlite3 database file that will be created</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/crawlPlay.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Lena Schiffer, Svende Landwehrkamp, Enrico Reich, Janos Borst.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/crawlPlay.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

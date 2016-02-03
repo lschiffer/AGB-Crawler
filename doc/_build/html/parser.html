@@ -1,0 +1,162 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>parser module &mdash; AGB-Crawler 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="AGB-Crawler 1.0 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-parser">
+<span id="parser-module"></span><h1>parser module<a class="headerlink" href="#module-parser" title="Permalink to this headline">¶</a></h1>
+<p>This is an interface to Python&#8217;s internal parser.</p>
+<dl class="exception">
+<dt id="parser.ParserError">
+<em class="property">exception </em><code class="descclassname">parser.</code><code class="descname">ParserError</code><a class="headerlink" href="#parser.ParserError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="parser.STType">
+<code class="descclassname">parser.</code><code class="descname">STType</code><a class="headerlink" href="#parser.STType" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">st</span></code></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.compilest">
+<code class="descclassname">parser.</code><code class="descname">compilest</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.compilest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compiles an ST object into a code object.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.expr">
+<code class="descclassname">parser.</code><code class="descname">expr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an ST object from an expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.isexpr">
+<code class="descclassname">parser.</code><code class="descname">isexpr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.isexpr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines if an ST object was created from an expression.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.issuite">
+<code class="descclassname">parser.</code><code class="descname">issuite</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.issuite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determines if an ST object was created from a suite.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.sequence2st">
+<code class="descclassname">parser.</code><code class="descname">sequence2st</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.sequence2st" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an ST object from a tree representation.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.st2list">
+<code class="descclassname">parser.</code><code class="descname">st2list</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.st2list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a list-tree representation of an ST.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.st2tuple">
+<code class="descclassname">parser.</code><code class="descname">st2tuple</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.st2tuple" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a tuple-tree representation of an ST.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.suite">
+<code class="descclassname">parser.</code><code class="descname">suite</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.suite" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an ST object from a suite.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="parser.tuple2st">
+<code class="descclassname">parser.</code><code class="descname">tuple2st</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#parser.tuple2st" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates an ST object from a tree representation.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/parser.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Lena Schiffer, Svende Landwehrkamp, Enrico Reich, Janos Borst.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/parser.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

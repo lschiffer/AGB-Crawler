@@ -1,0 +1,185 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>AGBParser module &mdash; AGB-Crawler 1.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="AGB-Crawler 1.0 documentation" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-AGBParser">
+<span id="agbparser-module"></span><h1>AGBParser module<a class="headerlink" href="#module-AGBParser" title="Permalink to this headline">¶</a></h1>
+<p>&#64;author: Lena Schiffer</p>
+<p>This is the Parsing module. It contains function to download and parse a HTML-Source of an AGB into strict XML.</p>
+<dl class="function">
+<dt id="AGBParser.main">
+<code class="descclassname">AGBParser.</code><code class="descname">main</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#AGBParser.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reads parameters from the command line.
+For information on  usage run parser with parameter &#8211;help.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="AGBParser.new_database">
+<code class="descclassname">AGBParser.</code><code class="descname">new_database</code><span class="sig-paren">(</span><em>output_file</em><span class="sig-paren">)</span><a class="headerlink" href="#AGBParser.new_database" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a new sqlite database with all necessary columns.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>output_file</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; path to the sqlite database</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="AGBParser.parse_url">
+<code class="descclassname">AGBParser.</code><code class="descname">parse_url</code><span class="sig-paren">(</span><em>url</em><span class="sig-paren">)</span><a class="headerlink" href="#AGBParser.parse_url" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the privacy policy at the given url.
+Only websites with utf-8 enconding are accepted.
+After the fetch of the website, in a preprocessing step all tags
+probably not containing content of the privacy policy are removed.
+A split on all headings (h3, h2, h1, strong) is performed to section
+the policy into paragraphs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>url</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; url of a website containing a privacy policy</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">tuple of the raw html and the parsed xml of the website</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">tuple(string, string)</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="AGBParser.process_table">
+<code class="descclassname">AGBParser.</code><code class="descname">process_table</code><span class="sig-paren">(</span><em>input_file</em>, <em>output_file</em>, <em>crawler_name</em>, <em>store_name</em><span class="sig-paren">)</span><a class="headerlink" href="#AGBParser.process_table" title="Permalink to this definition">¶</a></dt>
+<dd><p>Processes all urls in a stated input file and writes the parsed
+privacy policies into an output file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>input_file</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; path to the sqlite database containing the app ids, urls and app permissions (optional), each in one column from left to right</li>
+<li><strong>output_file</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; path to the desired output sqlite database</li>
+<li><strong>crawler_name</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; name of the url crawler</li>
+<li><strong>store_name</strong> (<a class="reference external" href="https://docs.python.org/library/string.html#module-string" title="(in Python v2.7)"><em>string</em></a>) &#8211; name of the app store</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">Nothing</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="AGBParser.remove_unwanted_tags">
+<code class="descclassname">AGBParser.</code><code class="descname">remove_unwanted_tags</code><span class="sig-paren">(</span><em>soup</em><span class="sig-paren">)</span><a class="headerlink" href="#AGBParser.remove_unwanted_tags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes unwanted tags from the given soup, that are unlikely to contain
+contents of the privacy policy. That is achieved by removing specific
+tags and tags with specific class names, id names or text.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>soup</strong> (<em>soup</em>) &#8211; soup of the website containing a privacy policy</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">Nothing</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/AGBParser.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2016, Lena Schiffer, Svende Landwehrkamp, Enrico Reich, Janos Borst.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+      |
+      <a href="_sources/AGBParser.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
