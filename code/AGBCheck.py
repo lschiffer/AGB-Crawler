@@ -116,17 +116,6 @@ def checkJS(xml):
     return (len(pat.findall(xml)) > 0)
 
 
-def main(database = "parsed_all.db"):
-    """main
-    :param database: name of the database to use
-    :type database: string
-    """
-
-
-    fin = open("dse6.xml","r")
-    dateiinhalt = fin.read()
-    print(erkennenDSE(dateiinhalt))
-    print(Cutting(dateiinhalt))
 
 
 
