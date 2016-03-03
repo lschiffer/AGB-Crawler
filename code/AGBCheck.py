@@ -19,7 +19,7 @@ import re
 #from multiprocessing import Queue
 
 def language_detect(xml):
-    """Check if there are curly braces inside given xml-string
+    """Try to detect the Language of the XML-Text
 
     :param xml: xml string to check
     :type xml: string
@@ -29,7 +29,7 @@ def language_detect(xml):
     return s
 
 def check_keywords(xml):
-    """Check if there are curly braces inside given xml-string
+    """Check for Keywords like 'datenschutz' to make sure it is a valid German Privacy Policy
 
     :param xml: xml string to check
     :type xml: string
@@ -41,11 +41,12 @@ def check_keywords(xml):
     return (any(x in xml for x in keywords))
 
 def cutting(xml):
-    """Check if there are curly braces inside given xml-string
+    """Trying to check for Additional Text at the start and end of the XML. If there is text found that can be omitted, cut it from the string and return the shortened version.
 
     :param xml: xml string to check
     :type xml: string
-    :return: true of false
+    :return: shortened String
+    :return type: string
     """
     #Anfangsvariablen setzen
     raw_text=xml
@@ -106,7 +107,7 @@ def cutting(xml):
 
 
 def checkJS(xml):
-    """Check if there are curly braces inside given xml-string
+    """Check if there are curly braces inside given xml-string as an Indication for Javascript
 
     :param xml: xml string to check
     :type xml: string
