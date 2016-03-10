@@ -3,7 +3,7 @@
 This project's goal is to crawl the privacy policies of applications in online web-stores (currently amazon and google play store), parse them into a structured XML-format and save them with all additional information inside a database. The main languages are german and english privacy policies.
 
 # 1. Step: Crawling
-  Each web-store has its own crawler; *crawlPlay.py* for Google Play Store and *crawler_amazon.py* for the Amazon Store. The purpose of these crawlers is only to find and save apps with links to privacy policies and their app-permissions.
+  Each web-store has its own crawler, `crawlPlay.py` for Google Play Store and `crawler_amazon.py` for the Amazon Store. The purpose of these crawlers is only to find and save apps with links to privacy policies and their app-permissions.
   The amazon crawler can be started by the following commands:
   
     import crawler_amazon
@@ -27,7 +27,60 @@ This project's goal is to crawl the privacy policies of applications in online w
         ...
       </para>
     </dse>
-    
+
+
+## Usage
+
+The parser can be started by executing the file `AGBParser.py`. The name of the input SQLite database containing distinct app IDs, URLs and (optionally) app permissions, each in one column in that order, has to be passed. All other parameters are optional. If multiple input files are passed, they will be processed consecutively. The input files will be associated with the crawler name and the store name at the according position in the options, for example the first crawler name passed will be associated with the first input file given. If the stated output file already exists, it will be updated, else a new file will be created.
+
+### Options
+
+| Option | Feature |
+|---|---|
+| -h, --help | show help message and exit |
+| -i INPUT_FILE, --input=INPUT_FILE | read App-IDs and URLs from sqlite3 database stored in INPUT_FILE (multiple input files possible) |
+| -o OUTPUT_FILE, --output=OUTPUT_FILE | write output as sqlite3 database into OUTPUT_FILE (default: output.sqlite) |
+| -c CRAWLER, --crawler=CRAWLER | name of the used crawler (multiple names possible) |
+| -s STORE, --store=STORE | name of the crawled store (multiple stores possible) |
+| -q, --quiet | print no output (only warnings and errors) |
+| -d, --debug | print parsed xml |
+
+### Example Usage
+
+Call the parser with its full path (relative to your location). In this example, the location is the top directory `AGB-Crawler` and in that folder are located two input files `GooglePlay.db` and `amazon.db`, that are passed. In the output file `output.db`, each entry created by `GooglePlay.db` has the store name `GooglePlayStore` and the crawler name `CrawlPlay`.
+
+```
+code/AGBParser.py -o output.db -i GooglePlay.db -s "GooglePlayStore" -c "CrawlPlay" -i amazon.db -s "AmazonAppstore" -c "CrawlerAmazon"
+```
+
+## Required Libraries
+
+We use Python 3.5.1. The following python packages need to be installed:
+
+* beautifulsoup4
+* lxml
+* urllib3
+* langdetect
+
+The parser is dependent on this project's `AGBCheck.py`, which contains automatic quality checks the parser makes use of.
+
+## Approach
+
+As mentioned earlier, the input files are processed consecutively. If the given output file already exists, it is updated, else a new database with all necessary columns is created. For each entry of an input file, the parser carries out the following steps. The app ID, the URL and the permissions are read from the input file.
+Then the HTML source of the website is requested, but websites without UTF-8 encoding are skipped. Also only the body is considered and specific tags are removed as explained below. All processing of each website is carried out using the BeautifulSoup format. The remaining HTML source after the mentioned preprocessing is split at the tags `<h3>`, `<h2>`, `<h1>` and `<strong>`. The content of these tags becomes the title of a paragraph, all the text between two such title tags becomes the text of a paragraph in our XML format. Only paragraphs with at least ten characters and privacy policies with at least 100 characters are regarded. The number of empty (or very short) paragraphs is logged in `empty_text_count` as an error value.
+On the resulting privacy policy in XML format a number of automatic quality checks defined in `AGBCheck.py` is performed. This includes the inference of the language, the detection of the beginning of the privacy policy, the check for specific keywords and the check for javascript code in the text.
+After each processed app, data is written into the output database. This comprises the following columns:
+
+* app_id, text_url, app_permissions (from input database)
+* crawler_name, app_storename (optional commandline parameters)
+* text_crawldata, text_raw, text_xml (result of parsing)
+* empty_text_count (parsing error value)
+* language, contains_keywords, contains_js (autocheck)
+
+### Removal of Specific Tags
+
+Before the actual parsing, a variety of tags which most likely contain no relevant content is stripped from the raw HTML source. First some tags with undesired names are removed, for example *script*, *header*, *img* and *meta*. Then tags with specific content are removed, namely *back to top* and *view full policy*. Also tags with certain keywords in their id or class are pruned off, such as *news*, *subscribe*, *rss*, *download*, *toc* and many more. Tags containing the keywords *menu* or *sidebar* are only removed, if their length falls below a threshold.
+
 # 3. Step: Cleanup 
   The final step in the workflow is to remove all duplicate privacy policies, determine the language of the text and evaluate if it really is a privacy policy by checking for keywords and manual inspection.
   To analyse the final database regarding language distribution depending on the quality, the following lines of R-code can be used:
