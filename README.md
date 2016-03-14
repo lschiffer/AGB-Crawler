@@ -81,7 +81,7 @@ After each processed app, data is written into the output database. This compris
 
 Before the actual parsing, a variety of tags which most likely contain no relevant content is stripped from the raw HTML source. First some tags with undesired names are removed, for example *script*, *header*, *img* and *meta*. Then tags with specific content are removed, namely *back to top* and *view full policy*. Also tags with certain keywords in their id or class are pruned off, such as *news*, *subscribe*, *rss*, *download*, *toc* and many more. Tags containing the keywords *menu* or *sidebar* are only removed, if their length falls below a threshold.
 
-# 3. Step: Cleanup 
+# 3. Step: Cleanup and manual inspection
   The final step in the workflow is to remove all duplicate privacy policies, determine the language of the text and evaluate if it really is a privacy policy by checking for keywords and manual inspection.
   The manual inspection is done by assigning a score-value between 0 and 100 to each sucessfully parsed privacy policy with the following meaning:
   
