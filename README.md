@@ -83,6 +83,18 @@ Before the actual parsing, a variety of tags which most likely contain no releva
 
 # 3. Step: Cleanup 
   The final step in the workflow is to remove all duplicate privacy policies, determine the language of the text and evaluate if it really is a privacy policy by checking for keywords and manual inspection.
+  The manual inspection is done by assigning a score-value between 0 and 100 to each sucessfully parsed privacy policy with the following meaning:
+  
+  value | meaning
+  --- | ---
+  0     | document is NO privacy policy
+  20    | document partly contains privacy policy related information but also non-relevant information (page header, footer, subscription information etc.)
+  40    | document contains noticeable parsing errors or part of the information is missing
+  60    | document is kind of a privacy policy but with 'strange' content (no legitimate content)
+  80    | document is a privacy policy but has a few errors (e.g. empty title)
+  100   | document is a privacy policy with good quality
+  
+  
   To analyse the final database regarding language distribution depending on the quality, the following lines of R-code can be used:
   
   ```R
